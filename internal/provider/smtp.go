@@ -91,7 +91,7 @@ func formatRFC5322Message(e *model.EmailMessage, defaultFrom string) []byte {
 
 	baseURL := e.TrackingBaseURL
 	if baseURL == "" {
-		baseURL = "http://localhost:8080"
+		baseURL = "https://mail-server-web.vercel.app"
 	}
 	baseURL = strings.TrimSuffix(baseURL, "/")
 
