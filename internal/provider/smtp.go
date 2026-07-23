@@ -70,25 +70,28 @@ func formatRFC5322Message(e *model.EmailMessage, defaultFrom string) []byte {
 	message.WriteString("MIME-Version: 1.0\r\n")
 
 	htmlContent := e.HTMLBody
-	if htmlContent != "" && len(e.To) > 0 {
-		// Inject tracking pixel for first recipient or general open tracking
-		trackingPixel := fmt.Sprintf(`<img src="http://localhost:8080/track/open?recipient=%s" width="1" height="1" style="display:none;" alt="" />`, e.To[0])
-		if strings.Contains(htmlContent, "</body>") {
-			htmlContent = strings.Replace(htmlContent, "</body>", trackingPixel+"</body>", 1)
-		} else {
-			htmlContent += trackingPixel
-		}
+	if htmlContent == "" && e.Body != "" {
+		// Convert plain text breaks into styled clean HTML
+		formattedLines := strings.ReplaceAll(e.Body, "\n", "<br/>")
+		htmlContent = fmt.Sprintf(`<div style="font-family: Arial, Helvetica, sans-serif; font-size: 15px; color: #1e293b; line-height: 1.6;">%s</div>`, formattedLines)
 	}
 
-	if htmlContent != "" {
-		message.WriteString("Content-Type: text/html; charset=UTF-8\r\n")
-		message.WriteString("Content-Transfer-Encoding: 8bit\r\n\r\n")
-		message.WriteString(htmlContent)
-	} else {
-		message.WriteString("Content-Type: text/plain; charset=UTF-8\r\n")
-		message.WriteString("Content-Transfer-Encoding: 8bit\r\n\r\n")
-		message.WriteString(e.Body)
+	// Always inject 1x1 tracking pixel
+	recipientEmail := ""
+	if len(e.To) > 0 {
+		recipientEmail = e.To[0]
 	}
+	trackingPixel := fmt.Sprintf(`<img src="http://localhost:8080/track/open?recipient=%s" width="1" height="1" style="display:none;" alt="" />`, recipientEmail)
+
+	if strings.Contains(htmlContent, "</body>") {
+		htmlContent = strings.Replace(htmlContent, "</body>", trackingPixel+"</body>", 1)
+	} else {
+		htmlContent += trackingPixel
+	}
+
+	message.WriteString("Content-Type: text/html; charset=UTF-8\r\n")
+	message.WriteString("Content-Transfer-Encoding: 8bit\r\n\r\n")
+	message.WriteString(htmlContent)
 
 	return []byte(message.String())
 }
