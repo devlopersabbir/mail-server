@@ -1,6 +1,7 @@
 import { APIResponse, ConfigResponse, ConfigUpdateRequest, EmailMessage, Job, Metrics } from '../types';
 
-const API_BASE = 'http://localhost:8080';
+const env = (import.meta as any).env || {};
+const API_BASE = (env.VITE_API_BASE_URL || env.VITE_API_BASE || 'http://localhost:8080').replace(/\/$/, '');
 
 export async function fetchHealth(): Promise<APIResponse> {
   const res = await fetch(`${API_BASE}/health`);
