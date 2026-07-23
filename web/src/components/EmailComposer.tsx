@@ -5,7 +5,7 @@ import { RecipientSelector } from './RecipientSelector';
 import { EditorToolbar } from './EditorToolbar';
 import { VisualCanvas } from './VisualCanvas';
 import { GmailInboxPreview } from './GmailInboxPreview';
-import { Send, FileText, CheckCircle2, AlertCircle, Eye, Code, Zap, Clock } from 'lucide-react';
+import { Send, FileText, CheckCircle2, AlertCircle, Eye, Code, Zap, Clock, Globe } from 'lucide-react';
 
 export const EmailComposer: React.FC = () => {
   const [recipientsInput, setRecipientsInput] = useState<string>('');
@@ -14,6 +14,9 @@ export const EmailComposer: React.FC = () => {
   const [body, setBody] = useState<string>('');
   const [htmlBody, setHtmlBody] = useState<string>('');
   const [replyTo, setReplyTo] = useState<string>('');
+  const [trackingBaseUrl, setTrackingBaseUrl] = useState<string>(
+    typeof window !== 'undefined' ? `${window.location.protocol}//${window.location.hostname}:8080` : 'http://localhost:8080'
+  );
 
   const [activeBodyTab, setActiveBodyTab] = useState<'editor' | 'code' | 'preview'>('editor');
   const [isSync, setIsSync] = useState<boolean>(false);
@@ -58,6 +61,7 @@ export const EmailComposer: React.FC = () => {
       body: body || htmlBody.replace(/<[^>]*>/g, ''),
       html_body: finalHtml,
       reply_to: replyTo,
+      tracking_base_url: trackingBaseUrl,
     };
 
     try {
@@ -124,13 +128,26 @@ export const EmailComposer: React.FC = () => {
         />
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div className="sm:col-span-2">
+          <div>
             <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-2">Subject Line</label>
             <input type="text" value={subject} onChange={(e) => setSubject(e.target.value)} placeholder="e.g. Special Offer inside" required className="w-full glass-input" />
           </div>
           <div>
             <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-2">Reply-To (Optional)</label>
             <input type="email" value={replyTo} onChange={(e) => setReplyTo(e.target.value)} placeholder="support@domain.com" className="w-full glass-input" />
+          </div>
+          <div>
+            <label className="block text-xs font-semibold uppercase tracking-wider text-indigo-400 mb-2 flex items-center gap-1">
+              <Globe className="h-3.5 w-3.5" /> Tracking Base URL / Domain
+            </label>
+            <input
+              type="text"
+              value={trackingBaseUrl}
+              onChange={(e) => setTrackingBaseUrl(e.target.value)}
+              placeholder="e.g. https://mail.mydomain.com or public IP"
+              required
+              className="w-full glass-input font-mono text-xs text-indigo-300"
+            />
           </div>
         </div>
 

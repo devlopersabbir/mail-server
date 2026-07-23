@@ -43,6 +43,7 @@ export interface EmailMessage {
   body: string;
   html_body?: string;
   reply_to?: string;
+  tracking_base_url?: string;
 }
 
 export interface Job {

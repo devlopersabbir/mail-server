@@ -54,12 +54,13 @@ func (h *EmailHandler) HandleSendEmailAsync(w http.ResponseWriter, r *http.Reque
 
 	for _, recipient := range baseMsg.To {
 		individualMsg := &model.EmailMessage{
-			From:     baseMsg.From,
-			To:       []string{recipient},
-			Subject:  baseMsg.Subject,
-			Body:     baseMsg.Body,
-			HTMLBody: baseMsg.HTMLBody,
-			ReplyTo:  baseMsg.ReplyTo,
+			From:            baseMsg.From,
+			To:              []string{recipient},
+			Subject:         baseMsg.Subject,
+			Body:            baseMsg.Body,
+			HTMLBody:        baseMsg.HTMLBody,
+			ReplyTo:         baseMsg.ReplyTo,
+			TrackingBaseURL: baseMsg.TrackingBaseURL,
 		}
 
 		job, err := h.pool.Enqueue(individualMsg)
@@ -128,12 +129,13 @@ func (h *EmailHandler) HandleSendEmailSync(w http.ResponseWriter, r *http.Reques
 
 	for _, recipient := range baseMsg.To {
 		individualMsg := &model.EmailMessage{
-			From:     baseMsg.From,
-			To:       []string{recipient},
-			Subject:  baseMsg.Subject,
-			Body:     baseMsg.Body,
-			HTMLBody: baseMsg.HTMLBody,
-			ReplyTo:  baseMsg.ReplyTo,
+			From:            baseMsg.From,
+			To:              []string{recipient},
+			Subject:         baseMsg.Subject,
+			Body:            baseMsg.Body,
+			HTMLBody:        baseMsg.HTMLBody,
+			ReplyTo:         baseMsg.ReplyTo,
+			TrackingBaseURL: baseMsg.TrackingBaseURL,
 		}
 
 		job := &model.Job{
@@ -229,11 +231,12 @@ func (h *EmailHandler) validateAndPrepareMsg(req *model.SendEmailRequest) (*mode
 	}
 
 	return &model.EmailMessage{
-		From:     sender,
-		To:       req.To,
-		Subject:  req.Subject,
-		Body:     req.Body,
-		HTMLBody: req.HTMLBody,
-		ReplyTo:  req.ReplyTo,
+		From:            sender,
+		To:              req.To,
+		Subject:         req.Subject,
+		Body:            req.Body,
+		HTMLBody:        req.HTMLBody,
+		ReplyTo:         req.ReplyTo,
+		TrackingBaseURL: req.TrackingBaseURL,
 	}, nil
 }

@@ -76,12 +76,19 @@ func formatRFC5322Message(e *model.EmailMessage, defaultFrom string) []byte {
 		htmlContent = fmt.Sprintf(`<div style="font-family: Arial, Helvetica, sans-serif; font-size: 15px; color: #1e293b; line-height: 1.6;">%s</div>`, formattedLines)
 	}
 
-	// Always inject 1x1 tracking pixel
+	// Always inject 1x1 tracking pixel using dynamic TrackingBaseURL
 	recipientEmail := ""
 	if len(e.To) > 0 {
 		recipientEmail = e.To[0]
 	}
-	trackingPixel := fmt.Sprintf(`<img src="http://localhost:8080/track/open?recipient=%s" width="1" height="1" style="display:none;" alt="" />`, recipientEmail)
+
+	baseURL := e.TrackingBaseURL
+	if baseURL == "" {
+		baseURL = "http://localhost:8080"
+	}
+	baseURL = strings.TrimSuffix(baseURL, "/")
+
+	trackingPixel := fmt.Sprintf(`<img src="%s/track/open?recipient=%s" width="1" height="1" style="display:none;" alt="" />`, baseURL, recipientEmail)
 
 	if strings.Contains(htmlContent, "</body>") {
 		htmlContent = strings.Replace(htmlContent, "</body>", trackingPixel+"</body>", 1)

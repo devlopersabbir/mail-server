@@ -3,21 +3,23 @@ package model
 import "time"
 
 type EmailMessage struct {
-	From     string   `json:"from"`
-	To       []string `json:"to"`
-	Subject  string   `json:"subject"`
-	Body     string   `json:"body"`
-	HTMLBody string   `json:"html_body,omitempty"`
-	ReplyTo  string   `json:"reply_to,omitempty"`
+	From            string   `json:"from"`
+	To              []string `json:"to"`
+	Subject         string   `json:"subject"`
+	Body            string   `json:"body"`
+	HTMLBody        string   `json:"html_body,omitempty"`
+	ReplyTo         string   `json:"reply_to,omitempty"`
+	TrackingBaseURL string   `json:"tracking_base_url,omitempty"`
 }
 
 type SendEmailRequest struct {
-	From     string   `json:"from,omitempty"`
-	To       []string `json:"to"`
-	Subject  string   `json:"subject"`
-	Body     string   `json:"body"`
-	HTMLBody string   `json:"html_body,omitempty"`
-	ReplyTo  string   `json:"reply_to,omitempty"`
+	From            string   `json:"from,omitempty"`
+	To              []string `json:"to"`
+	Subject         string   `json:"subject"`
+	Body            string   `json:"body"`
+	HTMLBody        string   `json:"html_body,omitempty"`
+	ReplyTo         string   `json:"reply_to,omitempty"`
+	TrackingBaseURL string   `json:"tracking_base_url,omitempty"`
 }
 
 type JobStatus string
