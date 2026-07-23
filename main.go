@@ -3,11 +3,12 @@ package main
 import (
 	"log"
 	conf "mail-server/conf"
+	"mail-server/constants"
 )
 
 func main() {
 	email := &conf.EmailMessage{
-		From:    "devlopersabbir@gmail.com",
+		From:    constants.GetSenderEmail(),
 		To:      []string{"mdsabbirkhansabbir86@gmail.com"},
 		Subject: "Production Email from Go",
 		Body:    "This email was sent using Go's net/smtp package with proper error handling and message formatting.",
