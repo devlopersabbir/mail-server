@@ -36,10 +36,17 @@ func (s *SMTPProvider) Send(msg *model.EmailMessage) error {
 
 	auth := smtp.PlainAuth("", s.Username, s.Password, s.Host)
 	addr := fmt.Sprintf("%s:%s", s.Host, s.Port)
-	formattedMsg := formatRFC5322Message(msg, s.Username)
 
-	if err := smtp.SendMail(addr, auth, msg.From, msg.To, formattedMsg); err != nil {
-		return fmt.Errorf("SMTP send failed via %s: %w", addr, err)
+	// Guaranteed 1-to-1 Fanout: Dispatch individual email to each recipient so To: header shows only their address
+	for _, recipient := range msg.To {
+		singleMsg := *msg
+		singleMsg.To = []string{recipient}
+
+		formattedMsg := formatRFC5322Message(&singleMsg, s.Username)
+
+		if err := smtp.SendMail(addr, auth, msg.From, []string{recipient}, formattedMsg); err != nil {
+			return fmt.Errorf("SMTP send failed for recipient %s via %s: %w", recipient, addr, err)
+		}
 	}
 
 	return nil

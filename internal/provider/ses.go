@@ -38,12 +38,18 @@ func (s *SESProvider) Send(msg *model.EmailMessage) error {
 	host := fmt.Sprintf("email-smtp.%s.amazonaws.com", s.Region)
 	port := "587"
 	addr := fmt.Sprintf("%s:%s", host, port)
-
 	auth := smtp.PlainAuth("", s.AccessKeyID, s.SecretAccessKey, host)
-	formattedMsg := formatRFC5322Message(msg, s.SenderEmail)
 
-	if err := smtp.SendMail(addr, auth, msg.From, msg.To, formattedMsg); err != nil {
-		return fmt.Errorf("AWS SES SMTP send failed via %s: %w", host, err)
+	// Guaranteed 1-to-1 Fanout for AWS SES
+	for _, recipient := range msg.To {
+		singleMsg := *msg
+		singleMsg.To = []string{recipient}
+
+		formattedMsg := formatRFC5322Message(&singleMsg, s.SenderEmail)
+
+		if err := smtp.SendMail(addr, auth, msg.From, []string{recipient}, formattedMsg); err != nil {
+			return fmt.Errorf("AWS SES SMTP send failed for recipient %s via %s: %w", recipient, host, err)
+		}
 	}
 
 	return nil
