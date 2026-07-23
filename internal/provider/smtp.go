@@ -69,10 +69,21 @@ func formatRFC5322Message(e *model.EmailMessage, defaultFrom string) []byte {
 	message.WriteString(fmt.Sprintf("Message-ID: %s\r\n", msgID))
 	message.WriteString("MIME-Version: 1.0\r\n")
 
-	if e.HTMLBody != "" {
+	htmlContent := e.HTMLBody
+	if htmlContent != "" && len(e.To) > 0 {
+		// Inject tracking pixel for first recipient or general open tracking
+		trackingPixel := fmt.Sprintf(`<img src="http://localhost:8080/track/open?recipient=%s" width="1" height="1" style="display:none;" alt="" />`, e.To[0])
+		if strings.Contains(htmlContent, "</body>") {
+			htmlContent = strings.Replace(htmlContent, "</body>", trackingPixel+"</body>", 1)
+		} else {
+			htmlContent += trackingPixel
+		}
+	}
+
+	if htmlContent != "" {
 		message.WriteString("Content-Type: text/html; charset=UTF-8\r\n")
 		message.WriteString("Content-Transfer-Encoding: 8bit\r\n\r\n")
-		message.WriteString(e.HTMLBody)
+		message.WriteString(htmlContent)
 	} else {
 		message.WriteString("Content-Type: text/plain; charset=UTF-8\r\n")
 		message.WriteString("Content-Transfer-Encoding: 8bit\r\n\r\n")

@@ -12,22 +12,25 @@ import (
 )
 
 type Metrics struct {
-	EnqueuedTotal uint64 `json:"enqueued_total"`
-	SentTotal     uint64 `json:"sent_total"`
-	FailedTotal   uint64 `json:"failed_total"`
-	QueueLength   int    `json:"queue_length"`
-	MaxWorkers    int    `json:"max_workers"`
+	EnqueuedTotal   uint64  `json:"enqueued_total"`
+	SentTotal       uint64  `json:"sent_total"`
+	FailedTotal     uint64  `json:"failed_total"`
+	OpenedTotal     uint64  `json:"opened_total"`
+	OpenRatePercent float64 `json:"open_rate_percent"`
+	QueueLength     int     `json:"queue_length"`
+	MaxWorkers      int     `json:"max_workers"`
 }
 
 type WorkerPool struct {
-	jobQueue   chan *model.Job
-	workers    int
-	wg         sync.WaitGroup
-	quit       chan struct{}
-	enqueued   uint64
-	sent       uint64
-	failed     uint64
-	jobsMap    sync.Map
+	jobQueue chan *model.Job
+	workers  int
+	wg       sync.WaitGroup
+	quit     chan struct{}
+	enqueued uint64
+	sent     uint64
+	failed   uint64
+	opened   uint64
+	jobsMap  sync.Map
 }
 
 var defaultPool *WorkerPool
@@ -67,10 +70,12 @@ func (wp *WorkerPool) Start() {
 func (wp *WorkerPool) Enqueue(msg *model.EmailMessage) (*model.Job, error) {
 	jobID := generateJobID()
 	job := &model.Job{
-		ID:        jobID,
-		Message:   msg,
-		Status:    model.StatusPending,
-		CreatedAt: time.Now(),
+		ID:               jobID,
+		Message:          msg,
+		Status:           model.StatusPending,
+		CreatedAt:        time.Now(),
+		OpenedAt:         make(map[string]time.Time),
+		OpenedRecipients: make([]string, 0),
 	}
 
 	wp.jobsMap.Store(jobID, job)
@@ -87,6 +92,37 @@ func (wp *WorkerPool) Enqueue(msg *model.EmailMessage) (*model.Job, error) {
 	}
 }
 
+func (wp *WorkerPool) RegisterJob(job *model.Job) {
+	if job != nil && job.ID != "" {
+		if job.OpenedAt == nil {
+			job.OpenedAt = make(map[string]time.Time)
+		}
+		wp.jobsMap.Store(job.ID, job)
+	}
+}
+
+func (wp *WorkerPool) RecordOpen(jobID, recipient string) {
+	if jobID == "" {
+		return
+	}
+	val, ok := wp.jobsMap.Load(jobID)
+	if !ok {
+		return
+	}
+
+	job := val.(*model.Job)
+	if job.OpenedAt == nil {
+		job.OpenedAt = make(map[string]time.Time)
+	}
+
+	if _, exists := job.OpenedAt[recipient]; !exists {
+		job.OpenedAt[recipient] = time.Now()
+		job.OpenedRecipients = append(job.OpenedRecipients, recipient)
+		atomic.AddUint64(&wp.opened, 1)
+		log.Printf("[Tracking] Open event recorded for Job %s (Recipient: %s)", jobID, recipient)
+	}
+}
+
 func (wp *WorkerPool) GetJob(jobID string) (*model.Job, bool) {
 	val, ok := wp.jobsMap.Load(jobID)
 	if !ok {
@@ -96,12 +132,22 @@ func (wp *WorkerPool) GetJob(jobID string) (*model.Job, bool) {
 }
 
 func (wp *WorkerPool) GetMetrics() Metrics {
+	sent := atomic.LoadUint64(&wp.sent)
+	opened := atomic.LoadUint64(&wp.opened)
+
+	var rate float64 = 0
+	if sent > 0 {
+		rate = (float64(opened) / float64(sent)) * 100.0
+	}
+
 	return Metrics{
-		EnqueuedTotal: atomic.LoadUint64(&wp.enqueued),
-		SentTotal:     atomic.LoadUint64(&wp.sent),
-		FailedTotal:   atomic.LoadUint64(&wp.failed),
-		QueueLength:   len(wp.jobQueue),
-		MaxWorkers:    wp.workers,
+		EnqueuedTotal:   atomic.LoadUint64(&wp.enqueued),
+		SentTotal:       sent,
+		FailedTotal:     atomic.LoadUint64(&wp.failed),
+		OpenedTotal:     opened,
+		OpenRatePercent: rate,
+		QueueLength:     len(wp.jobQueue),
+		MaxWorkers:      wp.workers,
 	}
 }
 

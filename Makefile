@@ -22,6 +22,19 @@ run:
 dev:
 	@go run main.go
 
+## web-install: Installs frontend dependencies in web/
+web-install:
+	@cd web && bun install
+
+## web-dev: Starts the Vite React TypeScript frontend dashboard
+web-dev:
+	@cd web && bun run dev
+
+## web-build: Builds the React TypeScript frontend production bundle
+web-build:
+	@cd web && bun run build
+
+
 ## test: Runs all Go unit tests
 test:
 	@go test -v ./...

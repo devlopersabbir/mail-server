@@ -9,6 +9,7 @@ import (
 	"mail-server/internal/queue"
 	"net/http"
 	"strings"
+	"time"
 )
 
 type EmailHandler struct {
@@ -95,8 +96,18 @@ func (h *EmailHandler) HandleSendEmailSync(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
+	job := &model.Job{
+		ID:        fmt.Sprintf("job_sync_%d", time.Now().UnixNano()),
+		Message:   msg,
+		Status:    model.StatusProcessing,
+		CreatedAt: time.Now(),
+	}
+	h.pool.RegisterJob(job)
+
 	p, err := provider.GetProvider()
 	if err != nil {
+		job.Status = model.StatusFailed
+		job.Error = err.Error()
 		sendJSON(w, http.StatusInternalServerError, model.APIResponse{
 			Status:  "error",
 			Message: err.Error(),
@@ -105,6 +116,8 @@ func (h *EmailHandler) HandleSendEmailSync(w http.ResponseWriter, r *http.Reques
 	}
 
 	if err := p.Send(msg); err != nil {
+		job.Status = model.StatusFailed
+		job.Error = err.Error()
 		sendJSON(w, http.StatusInternalServerError, model.APIResponse{
 			Status:  "error",
 			Message: fmt.Sprintf("Failed to send email via %s: %v", p.Name(), err),
@@ -112,9 +125,13 @@ func (h *EmailHandler) HandleSendEmailSync(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
+	job.Status = model.StatusSuccess
 	sendJSON(w, http.StatusOK, model.APIResponse{
 		Status:  "success",
 		Message: fmt.Sprintf("Email sent successfully via %s", p.Name()),
+		Data: map[string]interface{}{
+			"job_id": job.ID,
+		},
 	})
 }
 

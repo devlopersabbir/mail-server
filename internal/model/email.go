@@ -30,11 +30,13 @@ const (
 )
 
 type Job struct {
-	ID        string        `json:"id"`
-	Message   *EmailMessage `json:"message"`
-	Status    JobStatus     `json:"status"`
-	Error     string        `json:"error,omitempty"`
-	CreatedAt time.Time     `json:"created_at"`
+	ID               string               `json:"id"`
+	Message          *EmailMessage        `json:"message"`
+	Status           JobStatus            `json:"status"`
+	Error            string               `json:"error,omitempty"`
+	CreatedAt        time.Time            `json:"created_at"`
+	OpenedRecipients []string             `json:"opened_recipients,omitempty"`
+	OpenedAt         map[string]time.Time `json:"opened_at,omitempty"`
 }
 
 type APIResponse struct {
