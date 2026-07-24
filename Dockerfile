@@ -25,10 +25,13 @@ FROM alpine:latest
 
 WORKDIR /app
 
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 RUN apk add --no-cache ca-certificates tzdata
 
 # Copy compiled binary from builder stage
-COPY --from=builder /app/server .
+COPY --from=builder --chown=appuser:appgroup /app/server .
+
+USER appuser
 
 # Expose Go Mail Server API port
 EXPOSE 8080
