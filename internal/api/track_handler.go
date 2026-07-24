@@ -27,7 +27,7 @@ func (th *TrackHandler) HandleTrackOpen(w http.ResponseWriter, r *http.Request) 
 	jobID := r.URL.Query().Get("job_id")
 	recipient := r.URL.Query().Get("recipient")
 
-	if jobID != "" && recipient != "" {
+	if recipient != "" {
 		th.pool.RecordOpen(jobID, recipient)
 	}
 

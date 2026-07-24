@@ -82,11 +82,6 @@ func formatRFC5322Message(e *model.EmailMessage, defaultFrom string) []byte {
 		fromAddr = defaultFrom
 	}
 
-	domain := "gmail.com"
-	if parts := strings.Split(fromAddr, "@"); len(parts) == 2 {
-		domain = parts[1]
-	}
-
 	message.WriteString(fmt.Sprintf("From: %s\r\n", fromAddr))
 	message.WriteString(fmt.Sprintf("To: %s\r\n", strings.Join(e.To, ", ")))
 	if e.ReplyTo != "" {
@@ -94,9 +89,6 @@ func formatRFC5322Message(e *model.EmailMessage, defaultFrom string) []byte {
 	}
 	message.WriteString(fmt.Sprintf("Subject: %s\r\n", e.Subject))
 	message.WriteString(fmt.Sprintf("Date: %s\r\n", time.Now().Format(time.RFC1123Z)))
-
-	msgID := fmt.Sprintf("<%d.%s@%s>", time.Now().UnixNano(), generateRandomID(), domain)
-	message.WriteString(fmt.Sprintf("Message-ID: %s\r\n", msgID))
 
 	// List-Unsubscribe headers for high deliverability & reputation
 	message.WriteString(fmt.Sprintf("List-Unsubscribe: <mailto:%s?subject=unsubscribe>\r\n", fromAddr))

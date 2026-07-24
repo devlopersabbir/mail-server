@@ -7,6 +7,7 @@ import (
 	"mail-server/internal/model"
 	"mail-server/internal/provider"
 	"sort"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -103,15 +104,36 @@ func (wp *WorkerPool) RegisterJob(job *model.Job) {
 }
 
 func (wp *WorkerPool) RecordOpen(jobID, recipient string) {
-	if jobID == "" {
-		return
-	}
-	val, ok := wp.jobsMap.Load(jobID)
-	if !ok {
+	if recipient == "" {
 		return
 	}
 
-	job := val.(*model.Job)
+	if jobID != "" {
+		if val, ok := wp.jobsMap.Load(jobID); ok {
+			wp.markJobOpened(val.(*model.Job), recipient)
+		}
+		return
+	}
+
+	// Fallback: If jobID is empty, locate any job with this recipient and mark open
+	wp.jobsMap.Range(func(key, value interface{}) bool {
+		if job, ok := value.(*model.Job); ok {
+			if job.Message != nil {
+				for _, r := range job.Message.To {
+					if strings.EqualFold(r, recipient) {
+						wp.markJobOpened(job, recipient)
+					}
+				}
+			}
+		}
+		return true
+	})
+}
+
+func (wp *WorkerPool) markJobOpened(job *model.Job, recipient string) {
+	if job == nil {
+		return
+	}
 	if job.OpenedAt == nil {
 		job.OpenedAt = make(map[string]time.Time)
 	}
@@ -120,7 +142,7 @@ func (wp *WorkerPool) RecordOpen(jobID, recipient string) {
 		job.OpenedAt[recipient] = time.Now()
 		job.OpenedRecipients = append(job.OpenedRecipients, recipient)
 		atomic.AddUint64(&wp.opened, 1)
-		log.Printf("[Tracking] Open event recorded for Job %s (Recipient: %s)", jobID, recipient)
+		log.Printf("[Tracking] Open event recorded for Job %s (Recipient: %s)", job.ID, recipient)
 	}
 }
 
