@@ -2,8 +2,6 @@ package provider
 
 import (
 	"crypto/rand"
-	"crypto/sha256"
-	"encoding/base64"
 	"fmt"
 	"mail-server/internal/model"
 	"net/smtp"
@@ -88,16 +86,6 @@ func formatRFC5322Message(e *model.EmailMessage, defaultFrom string) []byte {
 		domain = parts[1]
 	}
 
-	// 1. Return-Path
-	message.WriteString(fmt.Sprintf("Return-Path: <%s>\r\n", fromAddr))
-
-	// 2. SPF Header (Sender Policy Framework)
-	message.WriteString(fmt.Sprintf("Received-SPF: pass (mail-server: domain of %s designates 127.0.0.1 as permitted sender) client-ip=127.0.0.1; envelope-from=%s; helo=mail-server;\r\n", fromAddr, fromAddr))
-
-	// 3. Authentication-Results (DMARC + SPF + DKIM Pass)
-	message.WriteString(fmt.Sprintf("Authentication-Results: mail-server; dkim=pass header.i=@%s header.s=mailserver; spf=pass (mail-server: domain of %s designates permitted sender) smtp.mailfrom=%s; dmarc=pass (p=REJECT sp=REJECT dis=NONE) header.from=%s;\r\n", domain, fromAddr, fromAddr, domain))
-
-	// 4. Standard RFC5322 Headers
 	message.WriteString(fmt.Sprintf("From: %s\r\n", fromAddr))
 	message.WriteString(fmt.Sprintf("To: %s\r\n", strings.Join(e.To, ", ")))
 	if e.ReplyTo != "" {
@@ -135,22 +123,6 @@ func formatRFC5322Message(e *model.EmailMessage, defaultFrom string) []byte {
 	} else {
 		htmlContent += trackingPixel
 	}
-
-	// Calculate SHA-256 body hash for DKIM Signature
-	hasher := sha256.New()
-	hasher.Write([]byte(htmlContent))
-	bodyHashB64 := base64.StdEncoding.EncodeToString(hasher.Sum(nil))
-
-	// Mock cryptographic DKIM signature calculation
-	sigHasher := sha256.New()
-	sigHasher.Write(fmt.Appendf(nil, "%s:%s:%s", fromAddr, msgID, bodyHashB64))
-	dkimSigB64 := base64.StdEncoding.EncodeToString(sigHasher.Sum(nil))
-
-	// 5. DKIM-Signature Header
-	message.WriteString(fmt.Sprintf("DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=%s; s=mailserver; h=from:to:subject:date:message-id:mime-version:content-type; bh=%s; b=%s\r\n", domain, bodyHashB64, dkimSigB64))
-
-	// 6. DMARC Header Indicator
-	message.WriteString("X-DMARC-Status: pass (p=reject)\r\n")
 
 	message.WriteString("Content-Type: text/html; charset=UTF-8\r\n")
 	message.WriteString("Content-Transfer-Encoding: 8bit\r\n\r\n")
