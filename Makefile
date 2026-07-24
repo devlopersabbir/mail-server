@@ -38,7 +38,7 @@ web-build:
 ## docker-build: Builds the multi-stage Docker image for GHCR
 docker-build:
 	@echo "Building Docker image for GHCR..."
-	@docker build -t $(IMAGE_NAME):latest .
+	@docker buildx build -t $(IMAGE_NAME):latest .
 
 ## docker-push: Pushes the Docker image to GitHub Container Registry (ghcr.io)
 docker-push:

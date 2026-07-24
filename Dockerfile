@@ -13,6 +13,10 @@ RUN go mod download || true
 # Copy source code
 COPY . .
 
+#cache 
+RUN --mount=type=cache,target=/go/pkg/mod
+RUN --mount=type=cache,target=/root/.cache/go-build
+
 # Build clean standalone binary
 RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-w -s" -o server ./cmd/server/main.go
 
