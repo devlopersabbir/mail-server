@@ -8,7 +8,7 @@ import {
 } from "../types";
 
 const env = (import.meta as any).env || {};
-const API_BASE = (
+export const API_BASE = (
   env.VITE_API_BASE_URL ||
   env.VITE_API_BASE ||
   "https://mail-server-tau.vercel.app"
