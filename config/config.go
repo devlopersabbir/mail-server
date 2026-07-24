@@ -24,8 +24,11 @@ func GetManager() *ConfigManager {
 				Provider:           model.ProviderType(getEnvOrDefault("MAIL_PROVIDER", string(model.ProviderSMTP))),
 				SMTPHost:           getEnvOrDefault("SMTP_HOST", "smtp.gmail.com"),
 				SMTPPort:           getEnvOrDefault("SMTP_PORT", "587"),
+				SMTPUsername:       getEnvOrDefault("SMTP_USERNAME", getEnvOrDefault("SMTP_EMAIL", "")),
 				SenderEmail:        getEnvOrDefault("SMTP_EMAIL", ""),
+				SenderName:         getEnvOrDefault("SENDER_NAME", ""),
 				SenderPassword:     getEnvOrDefault("SMTP_PASSWORD", ""),
+				ReplyTo:            getEnvOrDefault("REPLY_TO", ""),
 				AWSRegion:          getEnvOrDefault("AWS_REGION", "us-east-1"),
 				AWSAccessKeyID:     getEnvOrDefault("AWS_ACCESS_KEY_ID", ""),
 				AWSSecretAccessKey: getEnvOrDefault("AWS_SECRET_ACCESS_KEY", ""),
@@ -52,7 +55,10 @@ func (cm *ConfigManager) GetSafeResponse() model.ConfigResponse {
 		Provider:           cfg.Provider,
 		SMTPHost:           cfg.SMTPHost,
 		SMTPPort:           cfg.SMTPPort,
+		SMTPUsername:       cfg.SMTPUsername,
 		SenderEmail:        cfg.SenderEmail,
+		SenderName:         cfg.SenderName,
+		ReplyTo:            cfg.ReplyTo,
 		HasSenderPassword:  cfg.SenderPassword != "",
 		AWSRegion:          cfg.AWSRegion,
 		AWSAccessKeyID:     cfg.AWSAccessKeyID,
@@ -75,11 +81,20 @@ func (cm *ConfigManager) UpdateConfig(newCfg model.ConfigState) model.ConfigStat
 	if newCfg.SMTPPort != "" {
 		cm.config.SMTPPort = newCfg.SMTPPort
 	}
+	if newCfg.SMTPUsername != "" {
+		cm.config.SMTPUsername = newCfg.SMTPUsername
+	}
 	if newCfg.SenderEmail != "" {
 		cm.config.SenderEmail = newCfg.SenderEmail
 	}
+	if newCfg.SenderName != "" {
+		cm.config.SenderName = newCfg.SenderName
+	}
 	if newCfg.SenderPassword != "" {
 		cm.config.SenderPassword = newCfg.SenderPassword
+	}
+	if newCfg.ReplyTo != "" {
+		cm.config.ReplyTo = newCfg.ReplyTo
 	}
 	if newCfg.AWSRegion != "" {
 		cm.config.AWSRegion = newCfg.AWSRegion

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { ConfigResponse, ConfigUpdateRequest, ProviderType } from '../types';
+import { ConfigUpdateRequest, ProviderType } from '../types';
 import { fetchConfiguration, updateConfiguration } from '../services/api';
-import { Server, Key, Mail, ShieldCheck, CheckCircle2, AlertCircle, RefreshCw, Cpu } from 'lucide-react';
+import { Server, Key, Mail, ShieldCheck, CheckCircle2, AlertCircle, RefreshCw, Cpu, Zap, User, CornerUpLeft } from 'lucide-react';
 
 export const ConfigurationForm: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
@@ -11,8 +11,11 @@ export const ConfigurationForm: React.FC = () => {
   const [provider, setProvider] = useState<ProviderType>('smtp');
   const [smtpHost, setSmtpHost] = useState<string>('smtp.gmail.com');
   const [smtpPort, setSmtpPort] = useState<string>('587');
+  const [smtpUsername, setSmtpUsername] = useState<string>('');
   const [senderEmail, setSenderEmail] = useState<string>('');
+  const [senderName, setSenderName] = useState<string>('');
   const [senderPassword, setSenderPassword] = useState<string>('');
+  const [replyTo, setReplyTo] = useState<string>('');
 
   const [awsRegion, setAwsRegion] = useState<string>('us-east-1');
   const [awsAccessKey, setAwsAccessKey] = useState<string>('');
@@ -34,7 +37,10 @@ export const ConfigurationForm: React.FC = () => {
         setProvider(c.provider || 'smtp');
         if (c.smtp_host) setSmtpHost(c.smtp_host);
         if (c.smtp_port) setSmtpPort(c.smtp_port);
+        if (c.smtp_username) setSmtpUsername(c.smtp_username);
         if (c.sender_email) setSenderEmail(c.sender_email);
+        if (c.sender_name) setSenderName(c.sender_name);
+        if (c.reply_to) setReplyTo(c.reply_to);
         if (c.aws_region) setAwsRegion(c.aws_region);
         if (c.aws_access_key_id) setAwsAccessKey(c.aws_access_key_id);
         if (c.max_workers) setMaxWorkers(c.max_workers);
@@ -46,6 +52,28 @@ export const ConfigurationForm: React.FC = () => {
     }
   };
 
+  const loadCustomPreset = () => {
+    setProvider('smtp');
+    setSmtpHost('75.119.129.125');
+    setSmtpPort('1947');
+    setSmtpUsername('clietn_trulymagical43');
+    setSenderPassword('S3cghgfhghfghjghr3t');
+    setSenderEmail('sergio@sksgreens.com');
+    setSenderName('sergio');
+    setReplyTo('sergio@sksgreens.com');
+    setStatusMsg({ type: 'success', text: 'Loaded Custom Corporate SMTP parameters! Click "Save & Apply Configuration" below.' });
+  };
+
+  const loadGmailPreset = () => {
+    setProvider('smtp');
+    setSmtpHost('smtp.gmail.com');
+    setSmtpPort('587');
+    setSmtpUsername('devlopersabbir@gmail.com');
+    setSenderEmail('devlopersabbir@gmail.com');
+    setSenderName('Sabbir Khan');
+    setStatusMsg({ type: 'success', text: 'Loaded Gmail SMTP Preset (smtp.gmail.com:587).' });
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
@@ -54,12 +82,15 @@ export const ConfigurationForm: React.FC = () => {
     const payload: ConfigUpdateRequest = {
       provider,
       sender_email: senderEmail,
+      sender_name: senderName,
+      reply_to: replyTo,
       max_workers: Number(maxWorkers),
     };
 
     if (provider === 'smtp') {
       payload.smtp_host = smtpHost;
       payload.smtp_port = smtpPort;
+      payload.smtp_username = smtpUsername;
       if (senderPassword) payload.sender_password = senderPassword;
     } else if (provider === 'aws_ses') {
       payload.aws_region = awsRegion;
@@ -89,15 +120,15 @@ export const ConfigurationForm: React.FC = () => {
   }
 
   return (
-    <div className="glass-panel p-6 sm:p-8 max-w-4xl mx-auto">
-      <div className="flex items-center justify-between mb-6 pb-6 border-b border-slate-800">
+    <div className="glass-panel p-6 sm:p-8 max-w-4xl mx-auto space-y-6">
+      <div className="flex items-center justify-between pb-6 border-b border-slate-800">
         <div>
           <h2 className="text-xl font-bold text-white flex items-center gap-2">
             <Server className="h-5 w-5 text-indigo-400" />
             Mail Provider & Engine Configuration
           </h2>
           <p className="text-xs text-slate-400 mt-1">
-            Configure dynamic SMTP relays or AWS SES credentials. Settings apply instantly in runtime memory.
+            Configure custom corporate SMTP relays, dedicated IP servers, or AWS SES. Settings apply instantly in runtime memory.
           </p>
         </div>
         <button
@@ -110,9 +141,34 @@ export const ConfigurationForm: React.FC = () => {
         </button>
       </div>
 
+      {/* Quick Config Presets Bar */}
+      <div className="p-4 rounded-2xl bg-indigo-950/30 border border-indigo-500/20 space-y-2">
+        <span className="text-xs font-semibold text-indigo-300 flex items-center gap-1.5">
+          <Zap className="h-4 w-4 text-amber-400" /> Quick Configuration Presets
+        </span>
+        <div className="flex flex-wrap gap-3 pt-1">
+          <button
+            type="button"
+            onClick={loadCustomPreset}
+            className="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-medium text-xs shadow-lg shadow-indigo-600/20 transition-all flex items-center gap-2"
+          >
+            <Server className="h-3.5 w-3.5" />
+            Load Custom Corporate SMTP (75.119.129.125:1947)
+          </button>
+          <button
+            type="button"
+            onClick={loadGmailPreset}
+            className="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-medium text-xs border border-slate-700 transition-all flex items-center gap-2"
+          >
+            <Mail className="h-3.5 w-3.5 text-rose-400" />
+            Load Gmail SMTP (smtp.gmail.com:587)
+          </button>
+        </div>
+      </div>
+
       {statusMsg && (
         <div
-          className={`p-4 rounded-xl mb-6 border text-sm flex items-center gap-3 ${
+          className={`p-4 rounded-xl border text-sm flex items-center gap-3 ${
             statusMsg.type === 'success'
               ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300'
               : 'bg-rose-500/10 border-rose-500/30 text-rose-300'
@@ -133,7 +189,7 @@ export const ConfigurationForm: React.FC = () => {
           <label className="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-3">
             Active Provider Engine
           </label>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <button
               type="button"
               onClick={() => setProvider('smtp')}
@@ -147,8 +203,8 @@ export const ConfigurationForm: React.FC = () => {
                 <Mail className="h-6 w-6" />
               </div>
               <div>
-                <h3 className="font-semibold text-sm text-white">Standard SMTP Relay</h3>
-                <p className="text-xs text-slate-400">Gmail, Custom Corporate SMTP, SendGrid Relay</p>
+                <h3 className="font-semibold text-sm text-white">Standard / Custom SMTP Relay</h3>
+                <p className="text-xs text-slate-400">Custom IP, Dedicated Servers, Corporate SMTP, Gmail</p>
               </div>
             </button>
 
@@ -166,23 +222,54 @@ export const ConfigurationForm: React.FC = () => {
               </div>
               <div>
                 <h3 className="font-semibold text-sm text-white">Amazon SES (AWS)</h3>
-                <p className="text-xs text-slate-400">High-Volume High-Deliverability Cloud Mail</p>
+                <p className="text-xs text-slate-400">High-Volume Cloud Mail Service</p>
               </div>
             </button>
           </div>
         </div>
 
-        {/* Sender Email (Shared) */}
-        <div className="p-4 rounded-xl bg-slate-900/40 border border-slate-800/80">
-          <label className="block text-xs font-semibold text-slate-300 mb-2">Default Sender Email Address (From)</label>
-          <input
-            type="email"
-            value={senderEmail}
-            onChange={(e) => setSenderEmail(e.target.value)}
-            placeholder="e.g. notifications@yourdomain.com"
-            required
-            className="w-full glass-input"
-          />
+        {/* Sender Email, Name, and Reply-To */}
+        <div className="p-5 rounded-2xl bg-slate-900/50 border border-slate-800 space-y-4">
+          <h3 className="text-sm font-semibold text-slate-200 flex items-center gap-2">
+            <User className="h-4 w-4 text-indigo-400" /> Default Sender Identity & Headers
+          </h3>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-medium text-slate-400 mb-1">From Sender Email</label>
+              <input
+                type="email"
+                value={senderEmail}
+                onChange={(e) => setSenderEmail(e.target.value)}
+                placeholder="sergio@sksgreens.com"
+                required
+                className="w-full glass-input"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-slate-400 mb-1">Sender Display Name</label>
+              <input
+                type="text"
+                value={senderName}
+                onChange={(e) => setSenderName(e.target.value)}
+                placeholder="sergio"
+                className="w-full glass-input"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-xs font-medium text-slate-400 mb-1 flex items-center gap-1">
+              <CornerUpLeft className="h-3 w-3 text-indigo-400" /> Default Reply-To Address
+            </label>
+            <input
+              type="email"
+              value={replyTo}
+              onChange={(e) => setReplyTo(e.target.value)}
+              placeholder="sergio@sksgreens.com"
+              className="w-full glass-input font-mono"
+            />
+          </div>
         </div>
 
         {/* Provider Specific Settings */}
@@ -190,18 +277,18 @@ export const ConfigurationForm: React.FC = () => {
           <div className="space-y-4 p-5 rounded-2xl bg-indigo-950/20 border border-indigo-900/30">
             <h3 className="text-sm font-semibold text-indigo-300 flex items-center gap-2">
               <Server className="h-4 w-4 text-indigo-400" />
-              SMTP Connection Details
+              SMTP Connection Parameters
             </h3>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div className="sm:col-span-2">
-                <label className="block text-xs font-medium text-slate-400 mb-1">SMTP Host</label>
+                <label className="block text-xs font-medium text-slate-400 mb-1">SMTP Host IP / Domain</label>
                 <input
                   type="text"
                   value={smtpHost}
                   onChange={(e) => setSmtpHost(e.target.value)}
-                  placeholder="smtp.gmail.com"
-                  className="w-full glass-input"
+                  placeholder="75.119.129.125 or smtp.gmail.com"
+                  className="w-full glass-input font-mono"
                 />
               </div>
               <div>
@@ -210,23 +297,37 @@ export const ConfigurationForm: React.FC = () => {
                   type="text"
                   value={smtpPort}
                   onChange={(e) => setSmtpPort(e.target.value)}
-                  placeholder="587"
-                  className="w-full glass-input"
+                  placeholder="1947 or 587"
+                  className="w-full glass-input font-mono"
                 />
               </div>
             </div>
 
-            <div>
-              <label className="block text-xs font-medium text-slate-400 mb-1">
-                SMTP App Password / Auth Secret (Leave empty to keep existing password)
-              </label>
-              <input
-                type="password"
-                value={senderPassword}
-                onChange={(e) => setSenderPassword(e.target.value)}
-                placeholder="•••• •••• •••• ••••"
-                className="w-full glass-input font-mono"
-              />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-medium text-slate-400 mb-1">
+                  SMTP Username / Client ID
+                </label>
+                <input
+                  type="text"
+                  value={smtpUsername}
+                  onChange={(e) => setSmtpUsername(e.target.value)}
+                  placeholder="clietn_trulymagical43"
+                  className="w-full glass-input font-mono"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-slate-400 mb-1">
+                  SMTP Password / Auth Secret
+                </label>
+                <input
+                  type="password"
+                  value={senderPassword}
+                  onChange={(e) => setSenderPassword(e.target.value)}
+                  placeholder="••••••••••••••••"
+                  className="w-full glass-input font-mono"
+                />
+              </div>
             </div>
           </div>
         ) : (

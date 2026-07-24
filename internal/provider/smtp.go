@@ -11,18 +11,28 @@ import (
 )
 
 type SMTPProvider struct {
-	Host     string
-	Port     string
-	Username string
-	Password string
+	Host        string
+	Port        string
+	Username    string
+	Password    string
+	SenderEmail string
+	SenderName  string
+	ReplyTo     string
 }
 
 func NewSMTPProvider(cfg model.ConfigState) *SMTPProvider {
+	username := cfg.SMTPUsername
+	if username == "" {
+		username = cfg.SenderEmail
+	}
 	return &SMTPProvider{
-		Host:     cfg.SMTPHost,
-		Port:     cfg.SMTPPort,
-		Username: cfg.SenderEmail,
-		Password: cfg.SenderPassword,
+		Host:        cfg.SMTPHost,
+		Port:        cfg.SMTPPort,
+		Username:    username,
+		Password:    cfg.SenderPassword,
+		SenderEmail: cfg.SenderEmail,
+		SenderName:  cfg.SenderName,
+		ReplyTo:     cfg.ReplyTo,
 	}
 }
 
@@ -32,7 +42,7 @@ func (s *SMTPProvider) Name() string {
 
 func (s *SMTPProvider) Send(msg *model.EmailMessage) error {
 	if s.Username == "" || s.Password == "" {
-		return fmt.Errorf("missing SMTP credentials: ensure SMTP_EMAIL and SMTP_PASSWORD are configured in .env or via Configuration panel")
+		return fmt.Errorf("missing SMTP credentials: ensure SMTP_EMAIL/SMTP_USERNAME and SMTP_PASSWORD are configured in .env or via Configuration panel")
 	}
 
 	host := s.Host
@@ -52,7 +62,14 @@ func (s *SMTPProvider) Send(msg *model.EmailMessage) error {
 
 	fromAddr := msg.From
 	if fromAddr == "" {
+		fromAddr = s.SenderEmail
+	}
+	if fromAddr == "" {
 		fromAddr = s.Username
+	}
+
+	if msg.ReplyTo == "" && s.ReplyTo != "" {
+		msg.ReplyTo = s.ReplyTo
 	}
 
 	auth := smtp.PlainAuth("", s.Username, password, host)

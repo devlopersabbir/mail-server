@@ -4,7 +4,10 @@ export interface ConfigResponse {
   provider: ProviderType;
   smtp_host?: string;
   smtp_port?: string;
+  smtp_username?: string;
   sender_email: string;
+  sender_name?: string;
+  reply_to?: string;
   has_sender_password: boolean;
   aws_region?: string;
   aws_access_key_id?: string;
@@ -17,8 +20,11 @@ export interface ConfigUpdateRequest {
   provider?: ProviderType;
   smtp_host?: string;
   smtp_port?: string;
+  smtp_username?: string;
   sender_email?: string;
+  sender_name?: string;
   sender_password?: string;
+  reply_to?: string;
   aws_region?: string;
   aws_access_key_id?: string;
   aws_secret_access_key?: string;

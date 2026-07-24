@@ -13,8 +13,11 @@ type ConfigState struct {
 	// SMTP Settings
 	SMTPHost       string `json:"smtp_host,omitempty"`
 	SMTPPort       string `json:"smtp_port,omitempty"`
+	SMTPUsername   string `json:"smtp_username,omitempty"`
 	SenderEmail    string `json:"sender_email"`
+	SenderName     string `json:"sender_name,omitempty"`
 	SenderPassword string `json:"sender_password,omitempty"`
+	ReplyTo        string `json:"reply_to,omitempty"`
 
 	// AWS SES Settings
 	AWSRegion          string `json:"aws_region,omitempty"`
@@ -30,7 +33,10 @@ type ConfigResponse struct {
 	Provider           ProviderType `json:"provider"`
 	SMTPHost           string       `json:"smtp_host,omitempty"`
 	SMTPPort           string       `json:"smtp_port,omitempty"`
+	SMTPUsername       string       `json:"smtp_username,omitempty"`
 	SenderEmail        string       `json:"sender_email"`
+	SenderName         string       `json:"sender_name,omitempty"`
+	ReplyTo            string       `json:"reply_to,omitempty"`
 	HasSenderPassword  bool         `json:"has_sender_password"`
 	AWSRegion          string       `json:"aws_region,omitempty"`
 	AWSAccessKeyID     string       `json:"aws_access_key_id,omitempty"`
