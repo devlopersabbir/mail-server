@@ -6,6 +6,7 @@ import (
 	"log"
 	"mail-server/internal/model"
 	"mail-server/internal/provider"
+	"sort"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -129,6 +130,20 @@ func (wp *WorkerPool) GetJob(jobID string) (*model.Job, bool) {
 		return nil, false
 	}
 	return val.(*model.Job), true
+}
+
+func (wp *WorkerPool) GetAllJobs() []*model.Job {
+	var jobs []*model.Job
+	wp.jobsMap.Range(func(key, value interface{}) bool {
+		if j, ok := value.(*model.Job); ok {
+			jobs = append(jobs, j)
+		}
+		return true
+	})
+	sort.Slice(jobs, func(i, j int) bool {
+		return jobs[i].CreatedAt.After(jobs[j].CreatedAt)
+	})
+	return jobs
 }
 
 func (wp *WorkerPool) GetMetrics() Metrics {

@@ -68,10 +68,17 @@ export async function sendEmail(
   return data;
 }
 
-export async function fetchJobStatus(jobId: string): Promise<APIResponse<Job>> {
-  const res = await fetch(
-    `${API_BASE}/job-status?id=${encodeURIComponent(jobId)}`,
-  );
+export async function fetchJobStatus(jobId?: string): Promise<APIResponse<Job | Job[]>> {
+  const url = jobId && jobId.trim()
+    ? `${API_BASE}/job-status?id=${encodeURIComponent(jobId.trim())}`
+    : `${API_BASE}/job-status`;
+  const res = await fetch(url);
   if (!res.ok) throw new Error("Failed to fetch job status");
+  return res.json();
+}
+
+export async function fetchAllJobs(): Promise<APIResponse<Job[]>> {
+  const res = await fetch(`${API_BASE}/job-status`);
+  if (!res.ok) throw new Error("Failed to fetch jobs");
   return res.json();
 }

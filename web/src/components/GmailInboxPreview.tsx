@@ -1,5 +1,5 @@
 import React from 'react';
-import { Star, Reply, MoreVertical, Printer, ExternalLink } from 'lucide-react';
+import { Star, Reply, MoreVertical, Printer, ExternalLink, ShieldCheck, Lock, Shield } from 'lucide-react';
 
 interface GmailInboxPreviewProps {
   subject: string;
@@ -38,8 +38,20 @@ export const GmailInboxPreview: React.FC<GmailInboxPreviewProps> = ({ subject, h
               <span className="font-bold text-white text-sm">Sabbir Khan</span>
               <span className="text-xs text-slate-400">&lt;devlopersabbir@gmail.com&gt;</span>
             </div>
-            <div className="text-xs text-slate-400 flex items-center gap-1">
-              to <span className="font-medium text-slate-200">me</span>
+            <div className="text-xs text-slate-400 flex items-center gap-2 mt-0.5">
+              <span>to <span className="font-medium text-slate-200">me</span></span>
+              {/* Security authentication indicators */}
+              <div className="flex items-center gap-1.5 ml-2">
+                <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 text-[10px] font-mono font-semibold">
+                  <Shield className="h-2.5 w-2.5" /> SPF: PASS
+                </span>
+                <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 text-[10px] font-mono font-semibold">
+                  <Lock className="h-2.5 w-2.5" /> DKIM: PASS
+                </span>
+                <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 text-[10px] font-mono font-semibold">
+                  <ShieldCheck className="h-2.5 w-2.5" /> DMARC: PASS
+                </span>
+              </div>
             </div>
           </div>
         </div>

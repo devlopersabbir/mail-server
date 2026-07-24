@@ -170,7 +170,7 @@ func (h *EmailHandler) HandleSendEmailSync(w http.ResponseWriter, r *http.Reques
 	})
 }
 
-// HandleGetJobStatus handles GET /job-status?id=job_...
+// HandleGetJobStatus handles GET /job-status?id=job_... or GET /job-status for all jobs
 func (h *EmailHandler) HandleGetJobStatus(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		sendJSON(w, http.StatusMethodNotAllowed, model.APIResponse{
@@ -182,9 +182,11 @@ func (h *EmailHandler) HandleGetJobStatus(w http.ResponseWriter, r *http.Request
 
 	jobID := r.URL.Query().Get("id")
 	if jobID == "" {
-		sendJSON(w, http.StatusBadRequest, model.APIResponse{
-			Status:  "error",
-			Message: "Missing required query parameter 'id'",
+		jobs := h.pool.GetAllJobs()
+		sendJSON(w, http.StatusOK, model.APIResponse{
+			Status:  "success",
+			Message: "All jobs retrieved",
+			Data:    jobs,
 		})
 		return
 	}
