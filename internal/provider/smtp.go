@@ -143,7 +143,7 @@ func formatRFC5322Message(e *model.EmailMessage, defaultFrom string) []byte {
 
 	// Mock cryptographic DKIM signature calculation
 	sigHasher := sha256.New()
-	sigHasher.Write([]byte(fmt.Sprintf("%s:%s:%s", fromAddr, msgID, bodyHashB64)))
+	sigHasher.Write(fmt.Appendf(nil, "%s:%s:%s", fromAddr, msgID, bodyHashB64))
 	dkimSigB64 := base64.StdEncoding.EncodeToString(sigHasher.Sum(nil))
 
 	// 5. DKIM-Signature Header

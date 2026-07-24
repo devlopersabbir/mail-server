@@ -8,10 +8,12 @@ import {
 } from "../types";
 
 const env = (import.meta as any).env || {};
+const isLocalhost = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+
 export const API_BASE = (
   env.VITE_API_BASE_URL ||
   env.VITE_API_BASE ||
-  "https://mail-server-tau.vercel.app"
+  (isLocalhost ? 'http://localhost:8080' : 'https://mail-server-tau.vercel.app')
 ).replace(/\/$/, "");
 
 export async function fetchHealth(): Promise<APIResponse> {
