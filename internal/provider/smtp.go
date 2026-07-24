@@ -33,20 +33,41 @@ func (s *SMTPProvider) Name() string {
 
 func (s *SMTPProvider) Send(msg *model.EmailMessage) error {
 	if s.Username == "" || s.Password == "" {
-		return fmt.Errorf("missing SMTP credentials: ensure SMTP_EMAIL and SMTP_PASSWORD are configured")
+		return fmt.Errorf("missing SMTP credentials: ensure SMTP_EMAIL and SMTP_PASSWORD are configured in .env or via Configuration panel")
 	}
 
-	auth := smtp.PlainAuth("", s.Username, s.Password, s.Host)
-	addr := fmt.Sprintf("%s:%s", s.Host, s.Port)
+	host := s.Host
+	if host == "" {
+		host = "smtp.gmail.com"
+	}
+	port := s.Port
+	if port == "" {
+		port = "587"
+	}
+
+	// Remove spaces from Gmail App Password if needed
+	password := strings.TrimSpace(s.Password)
+	if strings.Contains(host, "gmail.com") {
+		password = strings.ReplaceAll(password, " ", "")
+	}
+
+	fromAddr := msg.From
+	if fromAddr == "" {
+		fromAddr = s.Username
+	}
+
+	auth := smtp.PlainAuth("", s.Username, password, host)
+	addr := fmt.Sprintf("%s:%s", host, port)
 
 	// Guaranteed 1-to-1 Fanout: Dispatch individual email to each recipient so To: header shows only their address
 	for _, recipient := range msg.To {
 		singleMsg := *msg
+		singleMsg.From = fromAddr
 		singleMsg.To = []string{recipient}
 
 		formattedMsg := formatRFC5322Message(&singleMsg, s.Username)
 
-		if err := smtp.SendMail(addr, auth, msg.From, []string{recipient}, formattedMsg); err != nil {
+		if err := smtp.SendMail(addr, auth, fromAddr, []string{recipient}, formattedMsg); err != nil {
 			return fmt.Errorf("SMTP send failed for recipient %s via %s: %w", recipient, addr, err)
 		}
 	}
