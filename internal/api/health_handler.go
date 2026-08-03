@@ -5,6 +5,7 @@ import (
 	"mail-server/internal/model"
 	"mail-server/internal/queue"
 	"net/http"
+	"os"
 )
 
 type HealthHandler struct {
@@ -13,6 +14,26 @@ type HealthHandler struct {
 
 func NewHealthHandler(pool *queue.WorkerPool) *HealthHandler {
 	return &HealthHandler{pool: pool}
+}
+
+func (hh *HealthHandler) HandleRoot(w http.ResponseWriter, r *http.Request) {
+	if r.URL.Path != "/" {
+		http.NotFound(w, r)
+		return
+	}
+
+	nodeName, err := os.Hostname()
+	if err != nil || nodeName == "" {
+		nodeName = "unknown"
+	}
+
+	sendJSON(w, http.StatusOK, model.APIResponse{
+		Status:  "ok",
+		Message: "Mail server engine is operational",
+		Data: map[string]interface{}{
+			"node_name": nodeName,
+		},
+	})
 }
 
 func (hh *HealthHandler) HandleHealth(w http.ResponseWriter, r *http.Request) {
@@ -24,9 +45,17 @@ func (hh *HealthHandler) HandleHealth(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	nodeName, err := os.Hostname()
+	if err != nil || nodeName == "" {
+		nodeName = "unknown"
+	}
+
 	sendJSON(w, http.StatusOK, model.APIResponse{
 		Status:  "ok",
 		Message: "Mail server engine is operational",
+		Data: map[string]interface{}{
+			"node_name": nodeName,
+		},
 	})
 }
 

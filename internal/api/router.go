@@ -13,6 +13,7 @@ func NewRouter(pool *queue.WorkerPool) http.Handler {
 	configH := NewConfigHandler()
 	trackH := NewTrackHandler(pool)
 
+	mux.HandleFunc("/", healthH.HandleRoot)
 	mux.HandleFunc("/health", healthH.HandleHealth)
 	mux.HandleFunc("/metrics", healthH.HandleMetrics)
 	mux.HandleFunc("/configuration", configH.HandleConfiguration)
