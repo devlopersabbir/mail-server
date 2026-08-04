@@ -1,0 +1,20 @@
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: mail-server
+  namespace: mail-server
+
+spec:
+  replicas: 5
+  selector:
+    matchLabels:
+      app: mail-server
+  template:
+    metadata:
+      labels:
+        app: mail-server
+    spec:
+      containers:
+        - name: mail-server
+          image: ghcr.io/devlopersabbir/mail-server:latest
