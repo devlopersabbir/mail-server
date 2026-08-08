@@ -18,3 +18,10 @@ spec:
       containers:
         - name: mail-server
           image: ghcr.io/devlopersabbir/mail-server:latest
+          ports:
+            - containerPort: 8080
+          envFrom:
+            - configMapRef:
+                name: mail-server-config
+            - secretRef:
+                name: mail-server-secret

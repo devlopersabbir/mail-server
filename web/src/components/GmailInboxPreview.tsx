@@ -35,8 +35,8 @@ export const GmailInboxPreview: React.FC<GmailInboxPreviewProps> = ({ subject, h
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <span className="font-bold text-white text-sm">Sabbir Khan</span>
-              <span className="text-xs text-slate-400">&lt;devlopersabbir@gmail.com&gt;</span>
+              <span className="font-bold text-white text-sm">Sender Name</span>
+              <span className="text-xs text-slate-400">&lt;sender@example.com&gt;</span>
             </div>
             <div className="text-xs text-slate-400 flex items-center gap-2 mt-0.5">
               <span>to <span className="font-medium text-slate-200">me</span></span>

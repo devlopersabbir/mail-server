@@ -44,14 +44,15 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Build and Push Docker Image
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          file: ./Dockerfile
-          push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+      - name: Build with Docker Compose (No Cache)
+        run: |
+          docker compose build --no-cache mail-server
+
+      - name: Tag and Push Docker Images
+        run: |
+          for tag in $(echo "${{ steps.meta.outputs.tags }}"); do
+            docker tag ghcr.io/devlopersabbir/mail-server:latest "$tag"
+            docker push "$tag"
+          done
+
 

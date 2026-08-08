@@ -54,23 +54,23 @@ export const ConfigurationForm: React.FC = () => {
 
   const loadCustomPreset = () => {
     setProvider('smtp');
-    setSmtpHost('75.119.129.125');
-    setSmtpPort('1947');
-    setSmtpUsername('clietn_trulymagical43');
-    setSenderPassword('S3cghgfhghfghjghr3t');
-    setSenderEmail('sergio@sksgreens.com');
-    setSenderName('sergio');
-    setReplyTo('sergio@sksgreens.com');
-    setStatusMsg({ type: 'success', text: 'Loaded Custom Corporate SMTP parameters! Click "Save & Apply Configuration" below.' });
+    setSmtpHost('smtp.example.com');
+    setSmtpPort('587');
+    setSmtpUsername('smtp_user');
+    setSenderPassword('');
+    setSenderEmail('sender@example.com');
+    setSenderName('Corporate Sender');
+    setReplyTo('reply@example.com');
+    setStatusMsg({ type: 'success', text: 'Loaded Custom Corporate SMTP preset template!' });
   };
 
   const loadGmailPreset = () => {
     setProvider('smtp');
     setSmtpHost('smtp.gmail.com');
     setSmtpPort('587');
-    setSmtpUsername('devlopersabbir@gmail.com');
-    setSenderEmail('devlopersabbir@gmail.com');
-    setSenderName('Sabbir Khan');
+    setSmtpUsername('user@gmail.com');
+    setSenderEmail('user@gmail.com');
+    setSenderName('Your Name');
     setStatusMsg({ type: 'success', text: 'Loaded Gmail SMTP Preset (smtp.gmail.com:587).' });
   };
 
@@ -153,7 +153,7 @@ export const ConfigurationForm: React.FC = () => {
             className="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-medium text-xs shadow-lg shadow-indigo-600/20 transition-all flex items-center gap-2"
           >
             <Server className="h-3.5 w-3.5" />
-            Load Custom Corporate SMTP (75.119.129.125:1947)
+            Load Custom Corporate SMTP
           </button>
           <button
             type="button"
@@ -241,7 +241,7 @@ export const ConfigurationForm: React.FC = () => {
                 type="email"
                 value={senderEmail}
                 onChange={(e) => setSenderEmail(e.target.value)}
-                placeholder="sergio@sksgreens.com"
+                placeholder="sender@example.com"
                 required
                 className="w-full glass-input"
               />
@@ -252,7 +252,7 @@ export const ConfigurationForm: React.FC = () => {
                 type="text"
                 value={senderName}
                 onChange={(e) => setSenderName(e.target.value)}
-                placeholder="sergio"
+                placeholder="Sender Name"
                 className="w-full glass-input"
               />
             </div>
@@ -266,7 +266,7 @@ export const ConfigurationForm: React.FC = () => {
               type="email"
               value={replyTo}
               onChange={(e) => setReplyTo(e.target.value)}
-              placeholder="sergio@sksgreens.com"
+              placeholder="replyto@example.com"
               className="w-full glass-input font-mono"
             />
           </div>
@@ -287,7 +287,7 @@ export const ConfigurationForm: React.FC = () => {
                   type="text"
                   value={smtpHost}
                   onChange={(e) => setSmtpHost(e.target.value)}
-                  placeholder="75.119.129.125 or smtp.gmail.com"
+                  placeholder="smtp.example.com or smtp.gmail.com"
                   className="w-full glass-input font-mono"
                 />
               </div>
@@ -297,7 +297,7 @@ export const ConfigurationForm: React.FC = () => {
                   type="text"
                   value={smtpPort}
                   onChange={(e) => setSmtpPort(e.target.value)}
-                  placeholder="1947 or 587"
+                  placeholder="587 or 25"
                   className="w-full glass-input font-mono"
                 />
               </div>
@@ -312,7 +312,7 @@ export const ConfigurationForm: React.FC = () => {
                   type="text"
                   value={smtpUsername}
                   onChange={(e) => setSmtpUsername(e.target.value)}
-                  placeholder="clietn_trulymagical43"
+                  placeholder="username or email"
                   className="w-full glass-input font-mono"
                 />
               </div>
