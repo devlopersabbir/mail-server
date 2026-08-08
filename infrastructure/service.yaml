@@ -6,7 +6,7 @@ metadata:
   namespace: mail-server
 
 spec:
-  type: LoadBalancer
+  type: ClusterIP
   selector:
     app: mail-server
   ports:
