@@ -1,9 +1,9 @@
 services:
-  # Go Mail Server Service (Prod Only)
   mail-server:
     profiles:
       - prod
     image: ghcr.io/devlopersabbir/mail-server:latest
+    platform: linux/amd64
     build:
       context: .
       dockerfile: Dockerfile
