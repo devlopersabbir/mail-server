@@ -3,7 +3,7 @@ services:
     profiles:
       - prod
     image: ghcr.io/devlopersabbir/mail-server:latest
-    platform: linux/amd64
+    platform: linux/arm64
     build:
       context: .
       dockerfile: Dockerfile
