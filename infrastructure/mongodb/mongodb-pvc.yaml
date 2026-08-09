@@ -6,9 +6,9 @@ metadata:
   namespace: mail-server
 
 spec:
+  storageClassName: standard
   accessModes:
     - ReadWriteOnce
   resources:
     requests:
-      storage: 5Gi
-  storageClassName: standard
+      storage: 1Gi

@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: mongodb-deployment
+  namespace: mail-server
+  labels:
+    app: mongodb-deployment
+
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mongodb-deployment
+  template:
+    metadata:
+      labels:
+        app: mongodb-deployment
+    spec:
+      containers:
+        - image: mongo
+          name: mongodb-deployment
+          args: ["--dbpath", "/data/db"]
+          livenessProbe:
+            exec:
+              command:
+                - mongosh
+                - --eval
+                - "db.adminCommand('ping')"
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            successThreshold: 1
+            failureThreshold: 3
+          readinessProbe:
+            exec:
+              command:
+                - mongosh
+                - --eval
+                - "db.adminCommand('ping')"
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            successThreshold: 1
+            failureThreshold: 3
+          envFrom:
+            - secretRef:
+                name: mongodb-secret
+          volumeMounts:
+            - name: mongo-data-dir
+              mountPath: /data/db
+      volumes:
+        - name: mongo-data-dir
+          persistentVolumeClaim:
+            claimName: mongodb-pvc
