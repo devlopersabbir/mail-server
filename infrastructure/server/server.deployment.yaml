@@ -6,7 +6,7 @@ metadata:
   namespace: mail-server
 
 spec:
-  replicas: 3
+  replicas: 2
   selector:
     matchLabels:
       app: mail-server
@@ -21,7 +21,5 @@ spec:
           ports:
             - containerPort: 8080
           envFrom:
-            - configMapRef:
-                name: mail-server-config
             - secretRef:
-                name: mail-server-secret
+                name: server-secret
