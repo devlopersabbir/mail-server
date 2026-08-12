@@ -18,6 +18,7 @@ spec:
       containers:
         - name: mail-server
           image: ghcr.io/devlopersabbir/mail-server:latest
+          imagePullPolicy: Always
           ports:
             - containerPort: 8080
           envFrom:
