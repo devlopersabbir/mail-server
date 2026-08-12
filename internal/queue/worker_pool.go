@@ -4,8 +4,10 @@ import (
 	"crypto/rand"
 	"fmt"
 	"log"
+	"mail-server/internal/db"
 	"mail-server/internal/model"
 	"mail-server/internal/provider"
+	"mail-server/internal/repository"
 	"sort"
 	"strings"
 	"sync"
@@ -33,6 +35,7 @@ type WorkerPool struct {
 	failed   uint64
 	opened   uint64
 	jobsMap  sync.Map
+	repo     *repository.JobRepository
 }
 
 var defaultPool *WorkerPool
@@ -54,19 +57,23 @@ func NewWorkerPool(workers, capacity int) *WorkerPool {
 		capacity = 100000
 	}
 
+	storage := db.GetStorage()
+	repo := repository.NewJobRepository(storage)
+
 	return &WorkerPool{
 		jobQueue: make(chan *model.Job, capacity),
 		workers:  workers,
 		quit:     make(chan struct{}),
+		repo:     repo,
 	}
 }
 
 func (wp *WorkerPool) Start() {
 	for i := 0; i < wp.workers; i++ {
 		wp.wg.Add(1)
-		go wp.worker(i + 1)
+		go wp.worker(i)
 	}
-	log.Printf("[WorkerPool] Started %d background workers for async email processing", wp.workers)
+	log.Printf("[WorkerPool] Started %d background workers successfully", wp.workers)
 }
 
 func (wp *WorkerPool) Enqueue(msg *model.EmailMessage) (*model.Job, error) {
@@ -80,17 +87,21 @@ func (wp *WorkerPool) Enqueue(msg *model.EmailMessage) (*model.Job, error) {
 		OpenedRecipients: make([]string, 0),
 	}
 
-	wp.jobsMap.Store(jobID, job)
+	return job, wp.SubmitJob(job)
+}
 
+func (wp *WorkerPool) SubmitJob(job *model.Job) error {
 	select {
 	case wp.jobQueue <- job:
 		atomic.AddUint64(&wp.enqueued, 1)
-		return job, nil
+		wp.RegisterJob(job)
+		return nil
 	default:
 		job.Status = model.StatusFailed
 		job.Error = "worker pool queue capacity reached"
 		atomic.AddUint64(&wp.failed, 1)
-		return nil, fmt.Errorf("queue is full (capacity reached), try again later")
+		wp.RegisterJob(job)
+		return fmt.Errorf("queue is full (capacity reached), try again later")
 	}
 }
 
@@ -100,6 +111,9 @@ func (wp *WorkerPool) RegisterJob(job *model.Job) {
 			job.OpenedAt = make(map[string]time.Time)
 		}
 		wp.jobsMap.Store(job.ID, job)
+		if wp.repo != nil {
+			go wp.repo.SaveJob(job)
+		}
 	}
 }
 
@@ -111,6 +125,10 @@ func (wp *WorkerPool) RecordOpen(jobID, recipient string) {
 	if jobID != "" {
 		if val, ok := wp.jobsMap.Load(jobID); ok {
 			wp.markJobOpened(val.(*model.Job), recipient)
+		} else if wp.repo != nil {
+			if job, found := wp.repo.GetJob(jobID); found {
+				wp.markJobOpened(job, recipient)
+			}
 		}
 		return
 	}
@@ -143,15 +161,25 @@ func (wp *WorkerPool) markJobOpened(job *model.Job, recipient string) {
 		job.OpenedRecipients = append(job.OpenedRecipients, recipient)
 		atomic.AddUint64(&wp.opened, 1)
 		log.Printf("[Tracking] Open event recorded for Job %s (Recipient: %s)", job.ID, recipient)
+		if wp.repo != nil {
+			go wp.repo.SaveJob(job)
+		}
 	}
 }
 
 func (wp *WorkerPool) GetJob(jobID string) (*model.Job, bool) {
+	// 1. Check in-memory map
 	val, ok := wp.jobsMap.Load(jobID)
-	if !ok {
-		return nil, false
+	if ok {
+		return val.(*model.Job), true
 	}
-	return val.(*model.Job), true
+
+	// 2. Fallback to Redis Cache -> MongoDB Repository
+	if wp.repo != nil {
+		return wp.repo.GetJob(jobID)
+	}
+
+	return nil, false
 }
 
 func (wp *WorkerPool) GetAllJobs() []*model.Job {
@@ -205,6 +233,9 @@ func (wp *WorkerPool) worker(id int) {
 				return
 			}
 			job.Status = model.StatusProcessing
+			if wp.repo != nil {
+				go wp.repo.SaveJob(job)
+			}
 
 			p, err := provider.GetProvider()
 			if err != nil {
@@ -212,6 +243,9 @@ func (wp *WorkerPool) worker(id int) {
 				job.Error = err.Error()
 				atomic.AddUint64(&wp.failed, 1)
 				log.Printf("[Worker %d] Failed to resolve provider for Job %s: %v", id, job.ID, err)
+				if wp.repo != nil {
+					go wp.repo.SaveJob(job)
+				}
 				continue
 			}
 
@@ -223,6 +257,10 @@ func (wp *WorkerPool) worker(id int) {
 			} else {
 				job.Status = model.StatusSuccess
 				atomic.AddUint64(&wp.sent, 1)
+			}
+
+			if wp.repo != nil {
+				go wp.repo.SaveJob(job)
 			}
 
 		case <-wp.quit:
