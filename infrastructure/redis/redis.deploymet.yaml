@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: redis-server
+  namespace: mail-server
+
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: redis-server
+  template:
+    metadata:
+      labels:
+        app: redis-server
+        name: redis-server
+    spec:
+      nodeSelector:
+        node-type: worker
+      containers:
+        - name: redis-server
+          image: redis:alpine
+          args: ["--appendonly", "yes"]
+          ports:
+            - name: redis-server
+              containerPort: 6379
+          volumeMounts:
+            - name: lv-storage
+              mountPath: /data
+          envFrom:
+            - secretRef:
+                name: redis-secret
+      volumes:
+        - name: lv-storage
+          persistentVolumeClaim:
+            claimName: redis-pvc
