@@ -8,7 +8,7 @@ metadata:
 spec:
   type: LoadBalancer
   selector:
-    app: mongodb-deployment
+    app: mongodb
   ports:
     - port: 27017
       protocol: TCP

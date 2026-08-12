@@ -1,12 +1,13 @@
 apiVersion: apps/v1
-kind: Deployment
-
+kind: StatefulSet
 metadata:
   name: redis-server
   namespace: mail-server
-
+  labels:
+    app: redis-server
 spec:
-  replicas: 2
+  serviceName: "redis-service"
+  replicas: 3
   selector:
     matchLabels:
       app: redis-server
@@ -16,22 +17,24 @@ spec:
         app: redis-server
         name: redis-server
     spec:
-      nodeSelector:
-        node-type: worker
       containers:
         - name: redis-server
           image: redis:alpine
           args: ["--appendonly", "yes"]
           ports:
-            - name: redis-server
+            - name: redis-port
               containerPort: 6379
-          volumeMounts:
-            - name: lv-storage
-              mountPath: /data
           envFrom:
             - secretRef:
                 name: redis-secret
-      volumes:
-        - name: lv-storage
-          persistentVolumeClaim:
-            claimName: redis-pvc
+          volumeMounts:
+            - name: lv-storage
+              mountPath: /data
+  volumeClaimTemplates:
+    - metadata:
+        name: lv-storage
+      spec:
+        accessModes: [ "ReadWriteOnce" ]
+        resources:
+          requests:
+            storage: 1Gi
